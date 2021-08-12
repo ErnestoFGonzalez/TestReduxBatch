@@ -67,3 +67,120 @@ export const store = createStore(rootPersistedReducer, applyMiddleware(thunk));
 
 export const persistor = persistStore(store);
 ```
+
+## Conclusion
+
+Turns out there was no problem with `batch` whatsoever. I understood incorrectly that with `batch`, when I read `"allows any React updates in an event loop tick to be batched together into a single render pass"` from the [docs](https://react-redux.js.org/api/batch) I thought this involved any re-rendering of `mapStateToProps`.
+Turns out that `mapStateToProps` is executed in every dispatch, but the actual Component wrapped by the `connect` HOC will only re-render after the whole `batch` is executed. This is what they meant in the docs.
+You can easily verify this by commenting out the `batch` and printing `render` logs in the Component and in the `mapStateToProps`. With `batch` you get:
+
+```
+ LOG  Render: ReposScreen
+ LOG  mapStateToProps RepoList
+ LOG  Render: RepoList
+ LOG  mapStateToProps RepoList
+ LOG  mapStateToProps RepoList
+ LOG  mapStateToProps RepoList
+ LOG  mapStateToProps RepoList
+ LOG  mapStateToProps RepoList
+ LOG  mapStateToProps RepoList
+ LOG  mapStateToProps RepoList
+ LOG  mapStateToProps RepoList
+ LOG  mapStateToProps RepoList
+ LOG  mapStateToProps RepoList
+ LOG  mapStateToProps RepoList
+ LOG  mapStateToProps RepoList
+ LOG  mapStateToProps RepoList
+ LOG  mapStateToProps RepoList
+ LOG  mapStateToProps RepoList
+ LOG  mapStateToProps RepoList
+ LOG  mapStateToProps RepoList
+ LOG  mapStateToProps RepoList
+ LOG  Render: RepoList
+ LOG  Render: RepoCell
+ LOG  Render: RepoCell
+ LOG  Render: RepoCell
+ LOG  Render: RepoCell
+ LOG  Render: RepoCell
+ LOG  Render: RepoCell
+ LOG  Render: RepoCell
+ LOG  Render: RepoCell
+ LOG  Render: RepoCell
+ LOG  Render: RepoCell
+ LOG  Render: RepoCell
+ LOG  Render: RepoCell
+ LOG  Render: RepoCell
+ LOG  Render: RepoCell
+ LOG  Render: RepoCell
+ LOG  Render: RepoCell
+ LOG  Render: RepoCell
+ LOG  Render: RepoCell
+```
+
+and without `batch` you get:
+
+```
+LOG  Render: ReposScreen
+LOG  mapStateToProps RepoList
+LOG  Render: RepoList
+LOG  mapStateToProps RepoList
+LOG  Render: RepoList
+LOG  Render: RepoCell
+LOG  mapStateToProps RepoList
+LOG  Render: RepoList
+LOG  Render: RepoCell
+LOG  mapStateToProps RepoList
+LOG  Render: RepoList
+LOG  Render: RepoCell
+LOG  mapStateToProps RepoList
+LOG  Render: RepoList
+LOG  Render: RepoCell
+LOG  mapStateToProps RepoList
+LOG  Render: RepoList
+LOG  Render: RepoCell
+LOG  mapStateToProps RepoList
+LOG  Render: RepoList
+LOG  Render: RepoCell
+LOG  mapStateToProps RepoList
+LOG  Render: RepoList
+LOG  Render: RepoCell
+LOG  mapStateToProps RepoList
+LOG  Render: RepoList
+LOG  Render: RepoCell
+LOG  mapStateToProps RepoList
+LOG  Render: RepoList
+LOG  Render: RepoCell
+LOG  mapStateToProps RepoList
+LOG  Render: RepoList
+LOG  Render: RepoCell
+LOG  mapStateToProps RepoList
+LOG  Render: RepoList
+LOG  Render: RepoCell
+LOG  mapStateToProps RepoList
+LOG  Render: RepoList
+LOG  Render: RepoCell
+LOG  mapStateToProps RepoList
+LOG  Render: RepoList
+LOG  Render: RepoCell
+LOG  mapStateToProps RepoList
+LOG  Render: RepoList
+LOG  Render: RepoCell
+LOG  mapStateToProps RepoList
+LOG  Render: RepoList
+LOG  mapStateToProps RepoList
+LOG  Render: RepoList
+LOG  Render: RepoCell
+LOG  mapStateToProps RepoList
+LOG  Render: RepoList
+LOG  Render: RepoCell
+LOG  mapStateToProps RepoList
+LOG  Render: RepoList
+LOG  Render: RepoCell
+LOG  Render: RepoCell
+LOG  Render: RepoCell
+LOG  Render: RepoCell
+LOG  Render: RepoCell
+LOG  Render: RepoCell
+LOG  Render: RepoCell
+LOG  Render: RepoCell
+```
